@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Edit2, Trash2, Upload, Plus, X, UploadCloud, AlertCircle, Users } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useRouter } from "next/navigation";
+import { addResidentAction, updateResidentAction, deleteResidentAction, bulkImportResidentsAction } from "./actions";
+import { parseResidentExcel } from "./smartParser";
 
 export default function ResidentsClient({ initialResidents }: { initialResidents: any[] }) {
   const router = useRouter();
@@ -13,6 +15,10 @@ export default function ResidentsClient({ initialResidents }: { initialResidents
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  useEffect(() => {
+    setResidents(initialResidents);
+  }, [initialResidents]);
 
   // Modals state
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -59,25 +65,18 @@ export default function ResidentsClient({ initialResidents }: { initialResidents
     resetMessages();
 
     try {
+      let res;
       if (editingResident) {
-        // Update
-        const { error } = await supabase
-          .from("residents")
-          .update(formData)
-          .eq("id", editingResident.id);
-        
-        if (error) throw error;
-        setSuccessMsg("Data warga berhasil diperbarui.");
+        res = await updateResidentAction(editingResident.id, formData);
       } else {
-        // Insert
-        const { error } = await supabase
-          .from("residents")
-          .insert([formData]);
-        
-        if (error) throw error;
-        setSuccessMsg("Warga baru berhasil ditambahkan.");
+        res = await addResidentAction(formData);
       }
       
+      if (!res.success) {
+        throw new Error(res.error || "Gagal menyimpan data.");
+      }
+
+      setSuccessMsg(editingResident ? "Data warga berhasil diperbarui." : "Warga baru berhasil ditambahkan.");
       setIsFormOpen(false);
       refreshData();
     } catch (error: any) {
@@ -93,8 +92,8 @@ export default function ResidentsClient({ initialResidents }: { initialResidents
     setIsLoading(true);
     resetMessages();
     try {
-      const { error } = await supabase.from("residents").delete().eq("id", id);
-      if (error) throw error;
+      const res = await deleteResidentAction(id);
+      if (!res.success) throw new Error(res.error || "Gagal menghapus data.");
       setSuccessMsg("Data berhasil dihapus.");
       refreshData();
     } catch (error: any) {
@@ -115,40 +114,15 @@ export default function ResidentsClient({ initialResidents }: { initialResidents
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-      if (jsonData.length === 0) {
-        throw new Error("File kosong atau format salah.");
+      const { rows: rowsToUpsert, headerRowIdx } = parseResidentExcel(worksheet);
+
+      const res = await bulkImportResidentsAction(rowsToUpsert);
+      if (!res.success) {
+        throw new Error(res.error || "Gagal mengimpor data dari Excel.");
       }
 
-      // Validasi Header (harus ada nik, nama_lengkap, dll)
-      const firstRow: any = jsonData[0];
-      const requiredColumns = ["nik", "nama_lengkap", "jenis_kelamin", "agama", "rt", "pekerjaan"];
-      
-      for (const col of requiredColumns) {
-        if (!(col in firstRow)) {
-          throw new Error(`Kolom "${col}" tidak ditemukan di baris pertama Excel.`);
-        }
-      }
-
-      // Proses Upsert ke Supabase
-      const { error } = await supabase
-        .from("residents")
-        .upsert(
-          jsonData.map((row: any) => ({
-            nik: String(row.nik).trim(),
-            nama_lengkap: row.nama_lengkap,
-            jenis_kelamin: row.jenis_kelamin,
-            agama: row.agama,
-            rt: String(row.rt),
-            pekerjaan: row.pekerjaan
-          })),
-          { onConflict: 'nik' }
-        );
-
-      if (error) throw error;
-
-      setSuccessMsg(`Berhasil mengimpor ${jsonData.length} data warga.`);
+      setSuccessMsg(`Berhasil mengimpor ${rowsToUpsert.length} data warga (Header terdeteksi otomatis di baris ke-${headerRowIdx + 1}).`);
       setIsBulkOpen(false);
       refreshData();
 
@@ -156,15 +130,14 @@ export default function ResidentsClient({ initialResidents }: { initialResidents
       setErrorMsg(error.message || "Gagal memproses file Excel.");
     } finally {
       setIsLoading(false);
-      // Reset input file
       e.target.value = '';
     }
   };
 
   const refreshData = async () => {
+    router.refresh();
     const { data } = await supabase.from("residents").select("*").order("created_at", { ascending: false });
     if (data) setResidents(data);
-    router.refresh(); // refresh server cache if any
   };
 
   return (
@@ -268,6 +241,11 @@ export default function ResidentsClient({ initialResidents }: { initialResidents
                 <X size={20} />
               </button>
             </div>
+            {errorMsg && (
+              <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-2 text-sm font-medium">
+                <AlertCircle size={18} /> {errorMsg}
+              </div>
+            )}
             <form onSubmit={handleFormSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">NIK</label>
@@ -375,13 +353,19 @@ export default function ResidentsClient({ initialResidents }: { initialResidents
                 <X size={20} />
               </button>
             </div>
-            
+            {errorMsg && (
+              <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-2 text-sm font-medium">
+                <AlertCircle size={18} /> {errorMsg}
+              </div>
+            )}
             <div className="p-6">
               <div className="bg-blue-50 text-blue-800 p-4 rounded-xl text-sm mb-6 border border-blue-100">
-                <p className="font-semibold mb-2">Panduan Format File Excel/CSV:</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Baris pertama <b>wajib</b> berisi nama kolom persis seperti berikut (huruf kecil semua):<br/><code className="bg-blue-200 px-1 py-0.5 rounded font-mono text-xs">nik, nama_lengkap, jenis_kelamin, agama, rt, pekerjaan</code></li>
-                  <li>Sistem akan menggunakan NIK sebagai kunci (Key). NIK baru akan ditambahkan, NIK yang sudah ada akan diperbarui datanya.</li>
+                <p className="font-semibold mb-2 flex items-center gap-1.5">⚡ Smart Excel Parser v1.5 Aktif:</p>
+                <ul className="list-disc pl-5 space-y-1 text-xs sm:text-sm">
+                  <li><b>Deteksi Header Otomatis:</b> Sistem otomatis mengenali baris judul tabel meskipun diawali oleh judul dokumen/gambar di baris 1-20.</li>
+                  <li><b>Urutan Kolom Fleksibel:</b> Posisi kolom tidak wajib berurutan (misal NIK boleh di depan, tengah, atau belakang).</li>
+                  <li><b>Mendukung Alias Kolom:</b> Mengenali berbagai variasi nama kolom (misal: &quot;JK&quot; / &quot;L/P&quot; &rarr; Jenis Kelamin, &quot;No. NIK&quot; &rarr; NIK, dsb.).</li>
+                  <li><b>Sanitasi NIK &amp; Upsert:</b> NIK baru otomatis ditambahkan (Insert), NIK lama diperbarui (Update) tanpa menghapus data lain.</li>
                 </ul>
               </div>
 
