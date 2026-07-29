@@ -10,7 +10,7 @@ export default function DemographicTab({ stats, villageInfo }: { stats: any[], v
   const genderData = stats.filter((s: any) => s.kategori === 'Jenis Kelamin').map((s: any) => ({ name: s.sub_kategori, value: Number(s.jumlah) }));
   const religionData = stats.filter((s: any) => s.kategori === 'Agama').map((s: any) => ({ name: s.sub_kategori, value: Number(s.jumlah) }));
   const jobData = stats.filter((s: any) => s.kategori === 'Pekerjaan').map((s: any) => ({ name: s.sub_kategori, value: Number(s.jumlah) }));
-  const rtData = stats.filter((s: any) => s.kategori === 'Sebaran RT').map((s: any) => ({ name: s.sub_kategori, value: Number(s.jumlah) }));
+  const rtData = stats.filter((s: any) => s.kategori === 'Sebaran RT').map((s: any) => ({ name: s.sub_kategori, value: Number(s.jumlah) })).sort((a, b) => a.name.localeCompare(b.name));
   
   const totalWarga = genderData.reduce((acc, curr) => acc + curr.value, 0);
   const totalRT = rtData.length;

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { Edit2, Trash2, Upload, Plus, X, UploadCloud, AlertCircle, Users } from "lucide-react";
+import { Edit2, Trash2, Upload, Plus, X, UploadCloud, AlertCircle, Users, Search } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useRouter } from "next/navigation";
 import { addResidentAction, updateResidentAction, deleteResidentAction, bulkImportResidentsAction } from "./actions";
@@ -15,6 +15,10 @@ export default function ResidentsClient({ initialResidents }: { initialResidents
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [itemsPerPage, setItemsPerPage] = useState<number | "ALL">(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     setResidents(initialResidents);
@@ -32,7 +36,10 @@ export default function ResidentsClient({ initialResidents }: { initialResidents
     jenis_kelamin: "Laki-laki",
     agama: "Islam",
     rt: "",
-    pekerjaan: ""
+    pekerjaan: "",
+    usia: "",
+    pendidikan_terakhir: "Tidak/Belum Sekolah",
+    status_perkawinan: "Belum Kawin"
   });
 
   const resetMessages = () => {
@@ -50,11 +57,14 @@ export default function ResidentsClient({ initialResidents }: { initialResidents
         jenis_kelamin: resident.jenis_kelamin || "Laki-laki",
         agama: resident.agama || "Islam",
         rt: resident.rt || "",
-        pekerjaan: resident.pekerjaan || ""
+        pekerjaan: resident.pekerjaan || "",
+        usia: resident.usia?.toString() || "",
+        pendidikan_terakhir: resident.pendidikan_terakhir || "Tidak/Belum Sekolah",
+        status_perkawinan: resident.status_perkawinan || "Belum Kawin"
       });
     } else {
       setEditingResident(null);
-      setFormData({ nik: "", nama_lengkap: "", jenis_kelamin: "Laki-laki", agama: "Islam", rt: "", pekerjaan: "" });
+      setFormData({ nik: "", nama_lengkap: "", jenis_kelamin: "Laki-laki", agama: "Islam", rt: "", pekerjaan: "", usia: "", pendidikan_terakhir: "Tidak/Belum Sekolah", status_perkawinan: "Belum Kawin" });
     }
     setIsFormOpen(true);
   };
@@ -140,6 +150,17 @@ export default function ResidentsClient({ initialResidents }: { initialResidents
     if (data) setResidents(data);
   };
 
+  const filteredResidents = residents.filter((r: any) => 
+    r.nama_lengkap.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    r.nik.includes(searchQuery)
+  );
+
+  const totalPages = itemsPerPage === "ALL" ? 1 : Math.ceil(filteredResidents.length / itemsPerPage);
+  
+  const displayedResidents = itemsPerPage === "ALL" 
+    ? filteredResidents 
+    : filteredResidents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div>
       {/* Alert Messages */}
@@ -173,6 +194,36 @@ export default function ResidentsClient({ initialResidents }: { initialResidents
         </div>
       </div>
 
+      {/* Filters and Search */}
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <input 
+            type="text" 
+            placeholder="Cari Nama / NIK..." 
+            value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm text-slate-900 bg-white"
+          />
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <span className="text-sm text-slate-500">Tampilkan:</span>
+          <select 
+            value={itemsPerPage}
+            onChange={(e) => { 
+              setItemsPerPage(e.target.value === "ALL" ? "ALL" : Number(e.target.value)); 
+              setCurrentPage(1); 
+            }}
+            className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-slate-900 bg-white"
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value="ALL">Semua</option>
+          </select>
+        </div>
+      </div>
+
       {/* Table Data */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
         <div className="overflow-x-auto">
@@ -183,26 +234,32 @@ export default function ResidentsClient({ initialResidents }: { initialResidents
                 <th className="px-6 py-4">Agama & L/P</th>
                 <th className="px-6 py-4">RT</th>
                 <th className="px-6 py-4">Pekerjaan</th>
+                <th className="px-6 py-4">Usia</th>
                 <th className="px-6 py-4 text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {residents && residents.length > 0 ? (
-                residents.map((r: any) => (
-                  <tr key={r.id} className="hover:bg-slate-50 transition-colors">
+              {displayedResidents && displayedResidents.length > 0 ? (
+                displayedResidents.map((r: any) => (
+                  <tr key={r.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4">
-                      <p className="font-bold text-slate-900">{r.nama_lengkap}</p>
-                      <p className="text-xs text-slate-500 font-mono mt-1">{r.nik}</p>
+                      <div className="font-semibold text-slate-800">{r.nama_lengkap}</div>
+                      <div className="text-xs text-slate-500 font-medium tracking-wider">{r.nik}</div>
                     </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      <p>{r.agama}</p>
-                      <p className="text-xs mt-1">{r.jenis_kelamin}</p>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-slate-700">{r.agama}</div>
+                      <div className="text-xs text-slate-500">{r.jenis_kelamin}</div>
                     </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      <span className="bg-slate-100 px-2 py-1 rounded-md font-medium text-xs">RT {r.rt}</span>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                        {r.rt}
+                      </span>
                     </td>
                     <td className="px-6 py-4 text-slate-600">
                       {r.pekerjaan}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600">
+                      {r.usia !== null && r.usia !== undefined ? `${r.usia} thn` : '-'}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-3">
@@ -227,6 +284,31 @@ export default function ResidentsClient({ initialResidents }: { initialResidents
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination Controls */}
+        {itemsPerPage !== "ALL" && totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t border-slate-100 gap-4">
+            <p className="text-sm text-slate-500">
+              Menampilkan <span className="font-medium">{((currentPage - 1) * itemsPerPage) + 1}</span> - <span className="font-medium">{Math.min(currentPage * itemsPerPage, filteredResidents.length)}</span> dari <span className="font-medium">{filteredResidents.length}</span> data
+            </p>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+              >
+                Sebelumnya
+              </button>
+              <button 
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+              >
+                Selanjutnya
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* MODAL: Single Form (Create/Edit) */}
@@ -320,6 +402,46 @@ export default function ResidentsClient({ initialResidents }: { initialResidents
                     placeholder="Contoh: Petani"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Usia</label>
+                  <input 
+                    type="number" 
+                    required 
+                    min="0"
+                    value={formData.usia}
+                    onChange={(e) => setFormData({...formData, usia: e.target.value})}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-900 bg-white font-medium"
+                    placeholder="Contoh: 25"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Pendidikan</label>
+                  <select 
+                    value={formData.pendidikan_terakhir}
+                    onChange={(e) => setFormData({...formData, pendidikan_terakhir: e.target.value})}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-900 bg-white font-medium"
+                  >
+                    <option value="Tidak/Belum Sekolah">Tidak/Belum Sekolah</option>
+                    <option value="Belum Tamat SD/Sederajat">Belum Tamat SD/Sederajat</option>
+                    <option value="SLTP/Sederajat">SLTP/Sederajat</option>
+                    <option value="SLTA/Sederajat">SLTA/Sederajat</option>
+                    <option value="Diploma IV/Strata I">Diploma IV/Strata I</option>
+                    <option value="Strata II/Strata III">Strata II/Strata III</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Status Perkawinan</label>
+                  <select 
+                    value={formData.status_perkawinan}
+                    onChange={(e) => setFormData({...formData, status_perkawinan: e.target.value})}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-900 bg-white font-medium"
+                  >
+                    <option value="Belum Kawin">Belum Kawin</option>
+                    <option value="Kawin">Kawin</option>
+                    <option value="Cerai Hidup">Cerai Hidup</option>
+                    <option value="Cerai Mati">Cerai Mati</option>
+                  </select>
+                </div>
               </div>
 
               <div className="pt-4 flex justify-end gap-3">
@@ -365,7 +487,7 @@ export default function ResidentsClient({ initialResidents }: { initialResidents
                   <li><b>Deteksi Header Otomatis:</b> Sistem otomatis mengenali baris judul tabel meskipun diawali oleh judul dokumen/gambar di baris 1-20.</li>
                   <li><b>Urutan Kolom Fleksibel:</b> Posisi kolom tidak wajib berurutan (misal NIK boleh di depan, tengah, atau belakang).</li>
                   <li><b>Mendukung Alias Kolom:</b> Mengenali berbagai variasi nama kolom (misal: &quot;JK&quot; / &quot;L/P&quot; &rarr; Jenis Kelamin, &quot;No. NIK&quot; &rarr; NIK, dsb.).</li>
-                  <li><b>Sanitasi NIK &amp; Upsert:</b> NIK baru otomatis ditambahkan (Insert), NIK lama diperbarui (Update) tanpa menghapus data lain.</li>
+                  <li><b>Sanitasi NIK &amp; Upsert:</b> Penyaringan NIK ganda otomatis di sistem. NIK baru ditambahkan (Insert), NIK lama diperbarui (Update) tanpa menghapus data lain.</li>
                 </ul>
               </div>
 

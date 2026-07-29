@@ -7,6 +7,9 @@ export interface ResidentRow {
   agama: string;
   rt: string;
   pekerjaan: string;
+  usia?: number;
+  pendidikan_terakhir?: string;
+  status_perkawinan?: string;
 }
 
 const ALIAS_MAP: Record<keyof ResidentRow, string[]> = {
@@ -15,7 +18,10 @@ const ALIAS_MAP: Record<keyof ResidentRow, string[]> = {
   jenis_kelamin: ['jenis kelamin', 'jk', 'sex', 'gender', 'l/p', 'jenis_kelamin', 'kelamin', 'l / p', 'pria/wanita', 'pria / wanita'],
   agama: ['agama', 'agm', 'kepercayaan'],
   rt: ['rt', 'no. rt', 'no rt', 'rukun tetangga', 'no_rt', 'rt/rw', 'rt / rw'],
-  pekerjaan: ['pekerjaan', 'jenis pekerjaan', 'status pekerjaan', 'mata pencaharian', 'profesi', 'profesi / pekerjaan']
+  pekerjaan: ['pekerjaan', 'jenis pekerjaan', 'status pekerjaan', 'mata pencaharian', 'profesi', 'profesi / pekerjaan'],
+  usia: ['usia', 'umur', 'age'],
+  pendidikan_terakhir: ['pendidikan', 'pendidikan terakhir', 'ijazah', 'tingkat pendidikan'],
+  status_perkawinan: ['status perkawinan', 'status nikah', 'status kawin', 'perkawinan', 'status']
 };
 
 export function parseResidentExcel(worksheet: XLSX.WorkSheet): { rows: ResidentRow[]; headerRowIdx: number } {
@@ -135,19 +141,38 @@ export function parseResidentExcel(worksheet: XLSX.WorkSheet): { rows: ResidentR
     let pekerjaanStr = getValue('pekerjaan', '-');
     if (!pekerjaanStr) pekerjaanStr = '-';
 
+    // Normalize Usia
+    let usiaStr = getValue('usia', '0');
+    let usiaNum = parseInt(usiaStr.replace(/[^0-9]/g, ''));
+    if (isNaN(usiaNum)) usiaNum = 0;
+
+    // Normalize Pendidikan
+    let pendidikanStr = getValue('pendidikan_terakhir', '-');
+    if (!pendidikanStr) pendidikanStr = '-';
+
+    // Normalize Status Perkawinan
+    let statusKawinStr = getValue('status_perkawinan', '-');
+    if (!statusKawinStr) statusKawinStr = '-';
+
     parsedRows.push({
       nik: nikStr,
       nama_lengkap: namaStr,
       jenis_kelamin: jkStr,
       agama: agamaStr,
       rt: rtStr,
-      pekerjaan: pekerjaanStr
+      pekerjaan: pekerjaanStr,
+      usia: usiaNum,
+      pendidikan_terakhir: pendidikanStr,
+      status_perkawinan: statusKawinStr
     });
   }
 
-  if (parsedRows.length === 0) {
+  // 4. Client-Side Deduplication by NIK
+  const uniqueRows = Array.from(new Map(parsedRows.map(row => [row.nik, row])).values());
+
+  if (uniqueRows.length === 0) {
     throw new Error(`Baris header ditemukan di baris ke-${headerRowIdx + 1}, namun tidak ada data warga valid di baris-baris bawahnya.`);
   }
 
-  return { rows: parsedRows, headerRowIdx };
+  return { rows: uniqueRows, headerRowIdx };
 }

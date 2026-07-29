@@ -1,15 +1,16 @@
-import { getVillageInfo, getDemographicStats, getOfficials, getContacts } from "@/lib/data";
+import { getVillageInfo, getDemographicStats, getOfficials, getContacts, getLocations } from "@/lib/data";
 import PublicLayout from "@/components/public/PublicLayout";
 
 export const revalidate = 60; // Revalidate cache every minute
 
 export default async function Home() {
   // Fetch data in parallel
-  const [villageInfo, stats, officials, contacts] = await Promise.all([
+  const [villageInfo, stats, officials, contacts, locations] = await Promise.all([
     getVillageInfo(),
     getDemographicStats(),
     getOfficials(),
     getContacts(),
+    getLocations(),
   ]);
 
   return (
@@ -18,6 +19,7 @@ export default async function Home() {
       stats={stats} 
       officials={officials} 
       contacts={contacts} 
+      locations={locations}
     />
   );
 }

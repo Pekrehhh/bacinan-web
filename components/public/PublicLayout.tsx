@@ -10,12 +10,14 @@ export default function PublicLayout({
   villageInfo, 
   stats, 
   officials, 
-  contacts 
+  contacts,
+  locations
 }: { 
   villageInfo: any; 
   stats: any[]; 
   officials: any[]; 
   contacts: any[]; 
+  locations?: any[];
 }) {
   const [activeTab, setActiveTab] = useState("dashboard");
 
@@ -25,7 +27,7 @@ export default function PublicLayout({
       
       <main className="flex-1 py-8">
         {activeTab === "dashboard" && <DashboardView stats={stats} villageInfo={villageInfo} />}
-        {activeTab === "map" && <MapTab coordinates={villageInfo.gmaps_coordinates} />}
+        {activeTab === "map" && <MapTab coordinates={villageInfo.gmaps_coordinates} locations={locations || []} />}
         {activeTab === "officials" && (
           <div className="max-w-7xl mx-auto px-4">
             <OfficialsTab officials={officials} contacts={contacts} />

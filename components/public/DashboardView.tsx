@@ -10,12 +10,30 @@ import { cn } from "@/lib/utils";
 const COLORS = ['#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e', '#f97316', '#eab308', '#22c55e', '#14b8a6'];
 
 export default function DashboardView({ stats, villageInfo }: { stats: any[], villageInfo: any }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Parse stats for charts
   const genderData = stats.filter((s: any) => s.kategori === 'Jenis Kelamin').map((s: any) => ({ name: s.sub_kategori, value: Number(s.jumlah) }));
-  const religionData = stats.filter((s: any) => s.kategori === 'Agama').map((s: any) => ({ name: s.sub_kategori, value: Number(s.jumlah) }));
+  const ageData = stats.filter((s: any) => s.kategori === 'Usia').map((s: any) => ({ name: s.sub_kategori, value: Number(s.jumlah) }));
   const jobData = stats.filter((s: any) => s.kategori === 'Pekerjaan').map((s: any) => ({ name: s.sub_kategori, value: Number(s.jumlah) }));
-  const rtData = stats.filter((s: any) => s.kategori === 'Sebaran RT').map((s: any) => ({ name: s.sub_kategori, value: Number(s.jumlah) }));
+  const educationData = stats.filter((s: any) => s.kategori === 'Pendidikan').map((s: any) => ({ name: s.sub_kategori, value: Number(s.jumlah) }));
+  const rtData = stats.filter((s: any) => s.kategori === 'Sebaran RT').map((s: any) => ({ name: s.sub_kategori, value: Number(s.jumlah) })).sort((a, b) => a.name.localeCompare(b.name));
   
+  // Filter out 'Belum Diisi' or 0 values to make public charts cleaner
+  const filterEmpty = (data: any[]) => data.filter(d => d.value > 0 && d.name !== 'Belum Diisi');
+
+  const validGenderData = filterEmpty(genderData);
+  const validAgeData = filterEmpty(ageData);
+  const validJobData = filterEmpty(jobData);
+  const validEducationData = filterEmpty(educationData);
+  
+  // We don't filter rtData because we want all RTs to show on the bar chart, or maybe we do filter empty
+  // Actually, wait, BarChart looks better if all RTs are shown, but for pie charts empty values are bad.
+  // For totalWarga, sum up the raw genderData to include everyone
   const totalWarga = genderData.reduce((acc, curr) => acc + curr.value, 0);
 
   // Interactive Carousel State
@@ -151,40 +169,90 @@ export default function DashboardView({ stats, villageInfo }: { stats: any[], vi
       {/* SECTION 2, 3, 4: Pie Charts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ChartCard title="Jenis Kelamin">
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie data={genderData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={5} dataKey="value">
-                {genderData.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-              </Pie>
-              <Tooltip formatter={(value) => [`${value} Jiwa`, 'Jumlah']} />
-            </PieChart>
-          </ResponsiveContainer>
-          <CustomLegend data={genderData} colors={COLORS} />
+          <div className="w-full h-[250px]">
+            {mounted && (
+              <ResponsiveContainer width="100%" height="100%">
+                {validGenderData.length > 0 ? (
+                  <PieChart>
+                    <Pie data={validGenderData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={5} dataKey="value">
+                      {validGenderData.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip formatter={(value, name) => [`${value} Jiwa`, name]} />
+                  </PieChart>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-slate-400 text-sm">Belum ada data</div>
+                )}
+              </ResponsiveContainer>
+            )}
+          </div>
+          <CustomLegend data={validGenderData} colors={COLORS} />
         </ChartCard>
 
-        <ChartCard title="Distribusi Agama">
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie data={religionData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={5} dataKey="value">
-                {religionData.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={COLORS[(index+2) % COLORS.length]} />)}
-              </Pie>
-              <Tooltip formatter={(value) => [`${value} Jiwa`, 'Jumlah']} />
-            </PieChart>
-          </ResponsiveContainer>
-          <CustomLegend data={religionData} colors={COLORS} offset={2} />
+        <ChartCard title="Kategori Usia">
+          <div className="w-full h-[250px]">
+            {mounted && (
+              <ResponsiveContainer width="100%" height="100%">
+                {validAgeData.length > 0 ? (
+                  <PieChart>
+                    <Pie data={validAgeData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={5} dataKey="value">
+                      {validAgeData.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={COLORS[(index+2) % COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip formatter={(value, name) => [`${value} Jiwa`, name]} />
+                  </PieChart>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-slate-400 text-sm">Belum ada data</div>
+                )}
+              </ResponsiveContainer>
+            )}
+          </div>
+          <CustomLegend data={validAgeData} colors={COLORS} offset={2} />
         </ChartCard>
 
-        <ChartCard title="Status Pekerjaan">
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie data={jobData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={5} dataKey="value">
-                {jobData.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={COLORS[(index+4) % COLORS.length]} />)}
-              </Pie>
-              <Tooltip formatter={(value) => [`${value} Jiwa`, 'Jumlah']} />
-            </PieChart>
-          </ResponsiveContainer>
-          <CustomLegend data={jobData} colors={COLORS} offset={4} />
+        <ChartCard title="Pendidikan">
+          <div className="w-full h-[250px]">
+            {mounted && (
+              <ResponsiveContainer width="100%" height="100%">
+                {validEducationData.length > 0 ? (
+                  <PieChart>
+                    <Pie data={validEducationData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={5} dataKey="value">
+                      {validEducationData.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={COLORS[(index+4) % COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip formatter={(value, name) => [`${value} Jiwa`, name]} />
+                  </PieChart>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-slate-400 text-sm">Belum ada data</div>
+                )}
+              </ResponsiveContainer>
+            )}
+          </div>
+          <CustomLegend data={validEducationData} colors={COLORS} offset={4} />
         </ChartCard>
+      </div>
+
+      {/* SECTION: Status Pekerjaan (Full Width) */}
+      <div className="bg-white rounded-[2rem] p-6 md:p-10 shadow-lg shadow-slate-200/50 border border-slate-100 w-full">
+        <h4 className="text-xl font-bold text-slate-800 mb-6">Status Pekerjaan</h4>
+        <div className="flex flex-col lg:flex-row items-center gap-8">
+          <div className="w-full lg:w-1/3 h-[250px]">
+            {mounted && (
+              <ResponsiveContainer width="100%" height="100%">
+                {validJobData.length > 0 ? (
+                  <PieChart>
+                    <Pie data={validJobData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3} dataKey="value">
+                      {validJobData.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={COLORS[(index+6) % COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip formatter={(value, name) => [`${value} Jiwa`, name]} />
+                  </PieChart>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-slate-400 text-sm">Belum ada data</div>
+                )}
+              </ResponsiveContainer>
+            )}
+          </div>
+          <div className="w-full lg:w-2/3">
+            <CustomLegend data={validJobData} colors={COLORS} offset={6} showAll={true} />
+          </div>
+        </div>
       </div>
 
       {/* SECTION 5: Bar Chart & Total Warga */}
@@ -201,17 +269,19 @@ export default function DashboardView({ stats, villageInfo }: { stats: any[], vi
         </div>
         
         <div className="w-full lg:w-2/3 h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={rtData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
-              <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
-              <Tooltip cursor={{fill: '#f1f5f9'}} formatter={(value) => [`${value} Jiwa`, 'Jumlah']} contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
-              <Bar dataKey="value" fill="#3b82f6" radius={[6, 6, 0, 0]}>
-                {rtData.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          {mounted && (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={rtData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+                <Tooltip cursor={{fill: '#f1f5f9'}} formatter={(value, name) => [`${value} Jiwa`, name]} contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                <Bar dataKey="value" fill="#3b82f6" radius={[6, 6, 0, 0]}>
+                  {rtData.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
@@ -230,20 +300,20 @@ function ChartCard({ title, children }: { title: string, children: React.ReactNo
   );
 }
 
-function CustomLegend({ data, colors, offset = 0 }: { data: any[], colors: string[], offset?: number }) {
-  // Only show top 4 to keep it clean, group rest as Others if needed, but for simplicity show up to 4
-  const displayData = data.slice(0, 4);
+function CustomLegend({ data, colors, offset = 0, showAll = false }: { data: any[], colors: string[], offset?: number, showAll?: boolean }) {
+  const limit = showAll ? data.length : 4;
+  const displayData = data.slice(0, limit);
   return (
-    <div className="mt-4 grid grid-cols-2 gap-2 px-2">
+    <div className={cn("mt-4 grid gap-2 px-2", showAll ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-2")}>
       {displayData.map((entry, index) => (
         <div key={index} className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colors[(index + offset) % colors.length] }} />
-          <span className="text-xs font-medium text-slate-600 truncate">{entry.name}</span>
+          <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: colors[(index + offset) % colors.length] }} />
+          <span className="text-xs font-medium text-slate-600 truncate" title={entry.name}>{entry.name} {showAll && <span className="text-slate-400 ml-1">({entry.value})</span>}</span>
         </div>
       ))}
-      {data.length > 4 && (
+      {!showAll && data.length > 4 && (
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-slate-300" />
+          <div className="w-3 h-3 rounded-full bg-slate-300 shrink-0" />
           <span className="text-xs font-medium text-slate-600 truncate">Lainnya...</span>
         </div>
       )}

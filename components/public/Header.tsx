@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Header({ 
@@ -11,6 +9,11 @@ export default function Header({
   activeTab: string, 
   setActiveTab: (tab: string) => void 
 }) {
+  const handleTabClick = (tab: string) => {
+    console.log("TAB CLICKED:", tab);
+    setActiveTab(tab);
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full bg-slate-50/80 backdrop-blur-xl border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
@@ -25,7 +28,7 @@ export default function Header({
 
         <nav className="hidden md:flex items-center gap-1 bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200/60">
           <button
-            onClick={() => setActiveTab("dashboard")}
+            onClick={() => handleTabClick("dashboard")}
             className={cn(
               "px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-300",
               activeTab === "dashboard"
@@ -36,7 +39,7 @@ export default function Header({
             DASHBOARD
           </button>
           <button
-            onClick={() => setActiveTab("map")}
+            onClick={() => handleTabClick("map")}
             className={cn(
               "px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-300",
               activeTab === "map"
@@ -47,7 +50,7 @@ export default function Header({
             PETA WILAYAH
           </button>
           <button
-            onClick={() => setActiveTab("officials")}
+            onClick={() => handleTabClick("officials")}
             className={cn(
               "px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-300",
               activeTab === "officials"
@@ -59,13 +62,7 @@ export default function Header({
           </button>
         </nav>
 
-        <Link
-          href="/admin/login"
-          className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-full text-sm font-medium transition-colors shadow-md"
-        >
-          <LogIn size={16} />
-          <span className="hidden sm:inline">Log In</span>
-        </Link>
+        <div className="w-24 hidden sm:block"></div> {/* Spacer to maintain centering if needed, or just leave empty */}
       </div>
 
       {/* Mobile nav indicator */}
@@ -80,7 +77,7 @@ export default function Header({
             DASHBOARD
           </button>
           <button
-            onClick={() => setActiveTab("map")}
+            onClick={() => handleTabClick("map")}
             className={cn(
               "px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap",
               activeTab === "map" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600"
@@ -89,7 +86,7 @@ export default function Header({
             PETA WILAYAH
           </button>
           <button
-            onClick={() => setActiveTab("officials")}
+            onClick={() => handleTabClick("officials")}
             className={cn(
               "px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap",
               activeTab === "officials" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600"
