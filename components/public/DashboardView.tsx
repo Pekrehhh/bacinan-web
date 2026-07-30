@@ -150,10 +150,10 @@ export default function DashboardView({ stats, villageInfo }: { stats: any[], vi
 
         {/* Carousel Controls */}
         <div className="absolute bottom-8 right-8 flex gap-3 z-20">
-          <button onClick={prevSlide} className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/20 transition-all shadow-md">
+          <button aria-label="Slide sebelumnya" onClick={prevSlide} className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/20 transition-all shadow-md">
             <ChevronLeft size={24} />
           </button>
-          <button onClick={nextSlide} className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/20 transition-all shadow-md">
+          <button aria-label="Slide selanjutnya" onClick={nextSlide} className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/20 transition-all shadow-md">
             <ChevronRight size={24} />
           </button>
         </div>
@@ -180,7 +180,7 @@ export default function DashboardView({ stats, villageInfo }: { stats: any[], vi
                     <Tooltip formatter={(value, name) => [`${value} Jiwa`, name]} />
                   </PieChart>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-slate-400 text-sm">Belum ada data</div>
+                  <div className="h-full flex items-center justify-center text-slate-500 text-sm">Belum ada data</div>
                 )}
               </ResponsiveContainer>
             )}
@@ -200,7 +200,7 @@ export default function DashboardView({ stats, villageInfo }: { stats: any[], vi
                     <Tooltip formatter={(value, name) => [`${value} Jiwa`, name]} />
                   </PieChart>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-slate-400 text-sm">Belum ada data</div>
+                  <div className="h-full flex items-center justify-center text-slate-500 text-sm">Belum ada data</div>
                 )}
               </ResponsiveContainer>
             )}
@@ -220,7 +220,7 @@ export default function DashboardView({ stats, villageInfo }: { stats: any[], vi
                     <Tooltip formatter={(value, name) => [`${value} Jiwa`, name]} />
                   </PieChart>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-slate-400 text-sm">Belum ada data</div>
+                  <div className="h-full flex items-center justify-center text-slate-500 text-sm">Belum ada data</div>
                 )}
               </ResponsiveContainer>
             )}
@@ -231,7 +231,7 @@ export default function DashboardView({ stats, villageInfo }: { stats: any[], vi
 
       {/* SECTION: Status Pekerjaan (Full Width) */}
       <div className="bg-white rounded-[2rem] p-6 md:p-10 shadow-lg shadow-slate-200/50 border border-slate-100 w-full">
-        <h4 className="text-xl font-bold text-slate-800 mb-6">Status Pekerjaan</h4>
+        <h3 className="text-xl font-bold text-slate-800 mb-6">Status Pekerjaan</h3>
         <div className="flex flex-col lg:flex-row items-center gap-8">
           <div className="w-full lg:w-1/3 h-[250px]">
             {mounted && (
@@ -244,7 +244,7 @@ export default function DashboardView({ stats, villageInfo }: { stats: any[], vi
                     <Tooltip formatter={(value, name) => [`${value} Jiwa`, name]} />
                   </PieChart>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-slate-400 text-sm">Belum ada data</div>
+                  <div className="h-full flex items-center justify-center text-slate-500 text-sm">Belum ada data</div>
                 )}
               </ResponsiveContainer>
             )}
@@ -292,7 +292,7 @@ export default function DashboardView({ stats, villageInfo }: { stats: any[], vi
 function ChartCard({ title, children }: { title: string, children: React.ReactNode }) {
   return (
     <div className="bg-white rounded-[2rem] p-6 shadow-lg shadow-slate-200/50 border border-slate-100 flex flex-col h-full">
-      <h4 className="text-lg font-bold text-slate-800 mb-2">{title}</h4>
+      <h3 className="text-lg font-bold text-slate-800 mb-2">{title}</h3>
       <div className="flex-1 flex flex-col justify-between">
         {children}
       </div>
@@ -308,7 +308,7 @@ function CustomLegend({ data, colors, offset = 0, showAll = false }: { data: any
       {displayData.map((entry, index) => (
         <div key={index} className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: colors[(index + offset) % colors.length] }} />
-          <span className="text-xs font-medium text-slate-600 truncate" title={entry.name}>{entry.name} {showAll && <span className="text-slate-400 ml-1">({entry.value})</span>}</span>
+          <span className="text-xs font-medium text-slate-600 truncate" title={entry.name}>{entry.name} {showAll && <span className="text-slate-500 ml-1">({entry.value})</span>}</span>
         </div>
       ))}
       {!showAll && data.length > 4 && (
