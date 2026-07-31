@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "SID-Web | Sistem Informasi Dusun",
+  title: "SID-Web Bacinan",
   description: "Portal Data dan Sistem Informasi Dusun",
 };
 
