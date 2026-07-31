@@ -99,6 +99,7 @@ export default function DashboardView({ stats, villageInfo }: { stats: any[], vi
             fill
             className="object-cover opacity-50"
             priority
+            fetchPriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/70 to-slate-900/40" />
         </div>

@@ -1,36 +1,38 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function Header({ 
-  activeTab, 
-  setActiveTab 
-}: { 
-  activeTab: string, 
-  setActiveTab: (tab: string) => void 
-}) {
+export default function Header() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab = searchParams.get("tab") || "dashboard";
+
   const handleTabClick = (tab: string) => {
-    console.log("TAB CLICKED:", tab);
-    setActiveTab(tab);
+    router.push(`/?tab=${tab}`);
   };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-slate-50/80 backdrop-blur-xl border-b border-slate-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 md:h-20 flex items-center justify-between gap-4">
+        
+        {/* Logo Section */}
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg md:text-xl shadow-sm">
             B
           </div>
-          <span className="font-extrabold text-xl tracking-tight text-slate-900">
+          {/* Hide text on very small screens if needed, but sm:block keeps it visible on small and up */}
+          <span className="font-extrabold text-lg md:text-xl tracking-tight text-slate-900 hidden sm:block">
             BACINAN
           </span>
         </div>
 
-        <nav className="hidden md:flex items-center gap-1 bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200/60">
+        {/* Navigation Tabs (Unified for both Mobile & Desktop) */}
+        <nav className="flex items-center gap-1 bg-white p-1 md:p-1.5 rounded-xl md:rounded-2xl shadow-sm border border-slate-200/60 overflow-x-auto w-full md:w-auto justify-start md:justify-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <button
             onClick={() => handleTabClick("dashboard")}
             className={cn(
-              "px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-300",
+              "px-3 md:px-5 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-semibold transition-all duration-300 whitespace-nowrap",
               activeTab === "dashboard"
                 ? "bg-slate-900 text-white shadow-md"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -41,7 +43,7 @@ export default function Header({
           <button
             onClick={() => handleTabClick("map")}
             className={cn(
-              "px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-300",
+              "px-3 md:px-5 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-semibold transition-all duration-300 whitespace-nowrap",
               activeTab === "map"
                 ? "bg-slate-900 text-white shadow-md"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -52,7 +54,7 @@ export default function Header({
           <button
             onClick={() => handleTabClick("officials")}
             className={cn(
-              "px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-300",
+              "px-3 md:px-5 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-semibold transition-all duration-300 whitespace-nowrap",
               activeTab === "officials"
                 ? "bg-slate-900 text-white shadow-md"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -61,39 +63,9 @@ export default function Header({
             STRUKTUR
           </button>
         </nav>
-
-        <div className="w-24 hidden sm:block"></div> {/* Spacer to maintain centering if needed, or just leave empty */}
-      </div>
-
-      {/* Mobile nav indicator */}
-      <div className="md:hidden flex overflow-x-auto p-4 gap-2 bg-white border-t border-slate-100 shadow-sm">
-         <button
-            onClick={() => setActiveTab("dashboard")}
-            className={cn(
-              "px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap",
-              activeTab === "dashboard" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600"
-            )}
-          >
-            DASHBOARD
-          </button>
-          <button
-            onClick={() => handleTabClick("map")}
-            className={cn(
-              "px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap",
-              activeTab === "map" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600"
-            )}
-          >
-            PETA WILAYAH
-          </button>
-          <button
-            onClick={() => handleTabClick("officials")}
-            className={cn(
-              "px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap",
-              activeTab === "officials" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600"
-            )}
-          >
-            STRUKTUR
-          </button>
+        
+        {/* Spacer for desktop symmetry, hidden on mobile */}
+        <div className="w-[104px] hidden md:block shrink-0"></div> 
       </div>
     </header>
   );
