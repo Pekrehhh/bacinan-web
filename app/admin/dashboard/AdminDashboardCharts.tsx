@@ -91,7 +91,7 @@ function ChartCard({ title, icon, data, offset = 0, fullWidth = false, mounted =
               </ResponsiveContainer>
             )
           ) : (
-            <div className="h-full flex items-center justify-center text-sm text-slate-400">
+            <div className="h-full flex items-center justify-center text-sm text-slate-900 font-medium">
               Belum ada data
             </div>
           )}
@@ -115,15 +115,15 @@ function CustomLegend({ data, colors, offset = 0, showAll = false }: { data: Cha
       {displayData.map((entry, index) => (
         <div key={index} className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: colors[(index + offset) % colors.length] }} />
-          <span className="text-xs font-medium text-slate-600 truncate" title={entry.name}>
-            {entry.name} <span className="text-slate-400 ml-1">({entry.value})</span>
+          <span className="text-xs font-bold text-slate-900 truncate" title={entry.name}>
+            {entry.name} <span className="text-slate-900 ml-1">({entry.value})</span>
           </span>
         </div>
       ))}
       {!showAll && data.length > 6 && (
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-slate-300 shrink-0" />
-          <span className="text-xs font-medium text-slate-600 truncate">Lainnya...</span>
+          <span className="text-xs font-bold text-slate-900 truncate">Lainnya...</span>
         </div>
       )}
     </div>

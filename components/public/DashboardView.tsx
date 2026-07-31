@@ -180,7 +180,7 @@ export default function DashboardView({ stats, villageInfo }: { stats: any[], vi
                     <Tooltip formatter={(value, name) => [`${value} Jiwa`, name]} />
                   </PieChart>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-slate-500 text-sm">Belum ada data</div>
+                  <div className="h-full flex items-center justify-center text-slate-900 font-medium text-sm">Belum ada data</div>
                 )}
               </ResponsiveContainer>
             )}
@@ -308,13 +308,13 @@ function CustomLegend({ data, colors, offset = 0, showAll = false }: { data: any
       {displayData.map((entry, index) => (
         <div key={index} className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: colors[(index + offset) % colors.length] }} />
-          <span className="text-xs font-medium text-slate-600 truncate" title={entry.name}>{entry.name} {showAll && <span className="text-slate-500 ml-1">({entry.value})</span>}</span>
+          <span className="text-xs font-bold text-slate-900 truncate" title={entry.name}>{entry.name} {showAll && <span className="text-slate-900 ml-1">({entry.value})</span>}</span>
         </div>
       ))}
       {!showAll && data.length > 4 && (
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-slate-300 shrink-0" />
-          <span className="text-xs font-medium text-slate-600 truncate">Lainnya...</span>
+          <span className="text-xs font-bold text-slate-900 truncate">Lainnya...</span>
         </div>
       )}
     </div>

@@ -176,8 +176,7 @@ export default function ResidentsClient({ initialResidents }: { initialResidents
       )}
 
       {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-        <h2 className="text-2xl font-bold text-slate-800">Manajemen Data Warga</h2>
+      <div className="flex flex-col sm:flex-row justify-end mb-6 gap-4">
         <div className="flex gap-2">
           <button 
             onClick={() => { resetMessages(); setIsBulkOpen(true); }}
