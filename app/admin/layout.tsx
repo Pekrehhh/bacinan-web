@@ -1,21 +1,17 @@
-import Sidebar from "./Sidebar";
+import AdminLayoutClient from "./AdminLayoutClient";
+import { createClient } from "@/utils/supabase/server";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <Sidebar />
-
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-auto p-8">
-          {children}
-        </div>
-      </main>
-    </div>
+    <AdminLayoutClient user={user}>
+      {children}
+    </AdminLayoutClient>
   );
 }
