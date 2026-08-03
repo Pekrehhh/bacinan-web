@@ -15,9 +15,6 @@ export async function getVillageInfo() {
     };
   }
 
-  // Override database coordinate with the new one
-  data.gmaps_coordinates = "https://maps.app.goo.gl/FR9JRrgiPEbMiaaw6";
-  
   return data;
 }
 
@@ -172,5 +169,14 @@ export const DUMMY_LOCATIONS: LocationItem[] = [
 ];
 
 export async function getLocations() {
-  return DUMMY_LOCATIONS;
+  const { data, error } = await supabase
+    .from("map_locations")
+    .select("*")
+    .order("urutan", { ascending: true });
+
+  if (error || !data || data.length === 0) {
+    return DUMMY_LOCATIONS;
+  }
+  
+  return data;
 }

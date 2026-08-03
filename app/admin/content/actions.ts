@@ -2,6 +2,8 @@
 
 import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
+import fs from "fs/promises";
+import path from "path";
 
 export async function updateVillageInfo(formData: any) {
   // First, check if there's an existing row in village_info
@@ -24,6 +26,7 @@ export async function updateVillageInfo(formData: any) {
         nama_dusun: formData.nama_dusun,
         deskripsi_singkat: formData.deskripsi_singkat,
         visi_misi: formData.visi_misi,
+        gmaps_coordinates: formData.gmaps_coordinates,
       })
       .eq("id", existingData[0].id);
     
@@ -37,6 +40,7 @@ export async function updateVillageInfo(formData: any) {
           nama_dusun: formData.nama_dusun,
           deskripsi_singkat: formData.deskripsi_singkat,
           visi_misi: formData.visi_misi,
+          gmaps_coordinates: formData.gmaps_coordinates,
         }
       ]);
     
@@ -172,3 +176,100 @@ export async function updateContacts(contactsData: any[]) {
 
   return { success: true, message: "Kontak penting berhasil diperbarui!" };
 }
+
+export async function updateLocations(locationsData: any[]) {
+  // First, get existing locations to see which ones to delete
+  const { data: existingLocations } = await supabase.from("map_locations").select("id");
+  
+  const incomingIds = locationsData.map(c => c.id).filter(id => id && id.length > 20 && !id.startsWith("new-"));
+  const idsToDelete = existingLocations?.map(c => c.id).filter(id => !incomingIds.includes(id)) || [];
+
+  let hasError = false;
+  let errorMessage = "";
+
+  // Delete removed locations
+  if (idsToDelete.length > 0) {
+    const { error } = await supabase.from("map_locations").delete().in("id", idsToDelete);
+    if (error) {
+      hasError = true;
+      errorMessage = error.message;
+    }
+  }
+
+  // Upsert incoming locations
+  for (const loc of locationsData) {
+    if (loc.id && loc.id.length > 20 && !loc.id.startsWith("new-")) {
+      // Update
+      const { error } = await supabase
+        .from("map_locations")
+        .update({
+          nama_lokasi: loc.nama_lokasi,
+          kategori: loc.kategori,
+          maps_url: loc.maps_url,
+          coordinate_string: loc.coordinate_string,
+          urutan: loc.urutan
+        })
+        .eq("id", loc.id);
+      
+      if (error) {
+        hasError = true;
+        errorMessage = error.message;
+      }
+    } else {
+      // Insert
+      const { error } = await supabase
+        .from("map_locations")
+        .insert([{
+          nama_lokasi: loc.nama_lokasi,
+          kategori: loc.kategori,
+          maps_url: loc.maps_url,
+          coordinate_string: loc.coordinate_string,
+          urutan: loc.urutan
+        }]);
+      
+      if (error) {
+        hasError = true;
+        errorMessage = error.message;
+      }
+    }
+  }
+
+  if (hasError) {
+    console.error("Error updating locations:", errorMessage);
+    return { success: false, message: errorMessage };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/admin/content");
+
+  return { success: true, message: "Titik peta berhasil diperbarui!" };
+}
+
+export async function updateMapImage(formData: FormData) {
+  try {
+    const file = formData.get("map_file") as File | null;
+    if (!file) {
+      return { success: false, message: "File gambar tidak ditemukan." };
+    }
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // Save to public/images/peta_admin.webp
+    const filepath = path.join(process.cwd(), "public", "images", "peta_admin.webp");
+    
+    // Ensure directory exists
+    await fs.mkdir(path.dirname(filepath), { recursive: true });
+    
+    await fs.writeFile(filepath, buffer);
+
+    revalidatePath("/");
+    revalidatePath("/admin/content");
+
+    return { success: true, message: "Peta wilayah berhasil diperbarui!" };
+  } catch (error: any) {
+    console.error("Error updating map image:", error);
+    return { success: false, message: error.message || "Terjadi kesalahan saat menyimpan gambar." };
+  }
+}
+

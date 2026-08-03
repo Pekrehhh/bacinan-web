@@ -10,8 +10,12 @@ export function generateMapsUrl(location: any) {
     return location.maps_url;
   }
   
-  if (location.coordinate_string) {
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.coordinate_string)}`;
+  const coord = location.coordinate_string?.trim();
+  if (coord) {
+    if (coord.startsWith('http://') || coord.startsWith('https://')) {
+      return coord;
+    }
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(coord)}`;
   }
   
   if (location.kategori === 'Fasilitas Umum' || location.kategori === 'Posyandu') {

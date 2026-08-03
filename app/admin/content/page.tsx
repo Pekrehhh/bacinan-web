@@ -1,10 +1,11 @@
-import { getVillageInfo, getOfficials, getContacts } from "@/lib/data";
+import { getVillageInfo, getOfficials, getContacts, getLocations } from "@/lib/data";
 import ContentClient from "./ContentClient";
 
 export default async function ContentPage() {
   const villageInfo = await getVillageInfo();
   const officials = await getOfficials();
   const contacts = await getContacts();
+  const locations = await getLocations();
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -19,6 +20,7 @@ export default async function ContentPage() {
         initialVillageInfo={villageInfo} 
         initialOfficials={officials} 
         initialContacts={contacts}
+        initialLocations={locations}
       />
     </div>
   );
