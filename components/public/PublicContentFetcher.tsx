@@ -20,8 +20,10 @@ export default async function PublicContentFetcher({ tab }: { tab: string }) {
       getContacts(),
     ]);
     return (
-      <div className="max-w-7xl mx-auto px-4">
-        <OfficialsTab officials={officials} contacts={contacts} />
+      <div className="w-full">
+        <div className="max-w-[1440px] mx-auto px-4">
+          <OfficialsTab officials={officials} contacts={contacts} />
+        </div>
       </div>
     );
   }

@@ -85,7 +85,7 @@ export default function DashboardView({ stats, villageInfo }: { stats: any[], vi
   }, [slides.length, isRevealed]);
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div className="w-full max-w-[1440px] mx-auto px-4 py-8 space-y-6">
       
       {/* SECTION 1: Top Hero Interactive Carousel */}
       <div 
@@ -226,7 +226,7 @@ export default function DashboardView({ stats, villageInfo }: { stats: any[], vi
               </ResponsiveContainer>
             )}
           </div>
-          <CustomLegend data={validEducationData} colors={COLORS} offset={4} />
+          <CustomLegend data={validEducationData} colors={COLORS} offset={4} limit={6} />
         </ChartCard>
       </div>
 
@@ -301,9 +301,9 @@ function ChartCard({ title, children }: { title: string, children: React.ReactNo
   );
 }
 
-function CustomLegend({ data, colors, offset = 0, showAll = false }: { data: any[], colors: string[], offset?: number, showAll?: boolean }) {
-  const limit = showAll ? data.length : 4;
-  const displayData = data.slice(0, limit);
+function CustomLegend({ data, colors, offset = 0, showAll = false, limit }: { data: any[], colors: string[], offset?: number, showAll?: boolean, limit?: number }) {
+  const finalLimit = showAll ? data.length : (limit || 4);
+  const displayData = data.slice(0, finalLimit);
   return (
     <div className={cn("mt-4 grid gap-2 px-2", showAll ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-2")}>
       {displayData.map((entry, index) => (
@@ -312,7 +312,7 @@ function CustomLegend({ data, colors, offset = 0, showAll = false }: { data: any
           <span className="text-xs font-bold text-slate-900 truncate" title={entry.name}>{entry.name} {showAll && <span className="text-slate-900 ml-1">({entry.value})</span>}</span>
         </div>
       ))}
-      {!showAll && data.length > 4 && (
+      {!showAll && data.length > finalLimit && (
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-slate-300 shrink-0" />
           <span className="text-xs font-bold text-slate-900 truncate">Lainnya...</span>

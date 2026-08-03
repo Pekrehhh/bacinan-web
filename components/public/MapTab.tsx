@@ -17,7 +17,7 @@ export default function MapTab({ coordinates, locations = [] }: { coordinates: s
   const perangkat = locations.filter(loc => loc.kategori === 'Perangkat Desa');
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto px-4 w-full space-y-8">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-[1440px] mx-auto px-4 w-full space-y-8">
       <div className="bg-white rounded-[2rem] p-8 md:p-12 shadow-xl border border-slate-100 flex flex-col items-center">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 w-full mb-8">
           <div className="flex items-center gap-4">
