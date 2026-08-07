@@ -4,11 +4,7 @@ import PublicContentFetcher from "@/components/public/PublicContentFetcher";
 
 export const revalidate = 60; // Revalidate cache every minute
 
-export default async function Home(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
-  // Await search params (instant operation) so we know which tab is active
-  const searchParams = await props.searchParams;
-  const tab = typeof searchParams.tab === 'string' ? searchParams.tab : 'dashboard';
-
+export default function Home(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Suspense fallback={<div className="h-20 bg-slate-50 border-b border-slate-200"></div>}>
@@ -22,9 +18,15 @@ export default async function Home(props: { searchParams: Promise<{ [key: string
             <p className="text-slate-500 font-medium animate-pulse">Memuat data desa...</p>
           </div>
         }>
-          <PublicContentFetcher tab={tab} />
+          <AsyncContent searchParamsPromise={props.searchParams} />
         </Suspense>
       </main>
     </div>
   );
+}
+
+async function AsyncContent({ searchParamsPromise }: { searchParamsPromise: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const searchParams = await searchParamsPromise;
+  const tab = typeof searchParams.tab === 'string' ? searchParams.tab : 'dashboard';
+  return <PublicContentFetcher tab={tab} />;
 }
